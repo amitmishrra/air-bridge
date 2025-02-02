@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Bridge</title>
+    <link rel="stylesheet" href="./styles/styles.css">
+    <script src="./scripts/renderer.js" defer></script>
+</head>
+
+<body>
+    <div class="container">
+        <div id="noADB">
+            <h1>Air Bridge</h1>
+
+            <p style="margin-top: 30px;">Sorry! Android Debug Bridge not found in this device.</p>
+
+            <img id="notFoundImage" src="./assets/notFound.svg" />
+
+            <button id="downloadButton">Download</button>
+
+        </div>
+
+        <div id="loaderContainer">
+            <div id="connectLoader" class="loader"></div>
+        </div>
+
+        <div id="main">
+            <h1>Air Bridge</h1>
+            <div class="header">
+                <p id="adbVersion" class="adb-version"></p>
+                <!-- Wireless Debugging Guide Button and Modal -->
+                <div id="infoBtn">ℹ️</div>
+                <div id="wirelessGuideModal" class="modal">
+                    <div class="modal-content">
+                        <div class="header">
+                            <p>To find your device's IP address and port for ADB Wireless:</p>
+                            <span id="closeModal" style="cursor:pointer;">&times;</span>
+                        </div>
+                        <ol>
+                            <li>Go to 'Settings' on your Android device.</li>
+                            <li>Tap on 'About phone'.</li>
+                            <li>Tap on 'Status'.</li>
+                            <li>Find 'IP address'.</li>
+                            <li>Enable 'Developer options'.</li>
+                            <li>Inside 'Developer options', enable 'Wireless debugging'.</li>
+                            <li>Note the displayed IP address and port number.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="notConnected">
+                <label for="device-ip">Enter Device Host and Port:</label>
+                <div class="input-container">
+                    <div class="input-section">
+                        <p id="ipPrefix" class="ipText">xxx.xxx.</p>
+                        <input type="text" id="host" placeholder="423">
+                        <p class="ipText">:</p>
+                        <input type="text" id="port" placeholder="5555">
+                    </div>
+                    <button id="connectBtn">Connect</button>
+                </div>
+                <img id="notConnctedImage" src="./assets/notConncted.svg" />
+
+            </div>
+
+
+            <div id="messageBox" class="message-box"></div>
+
+            <div id="connectedSection">
+                <img id="connctedImage" src="./assets/connected.svg" />
+                <div id="connectedIp"></div>
+                <button id="disconnectBtn">Disonnect</button>
+            </div>
+
+            <!-- New Modal for failed connections requiring pairing code -->
+            <div id="pairingModal" class="pair-modal">
+                <div class="pair-modal-content">
+                    <div class="header">
+                        <p>Please enter the pairing code along with host and port:</p>
+                        <span id="closePairingModal" style="cursor:pointer;">&times;</span>
+                    </div>
+                    <div class="pair-input-section">
+                        <input type="text" id="pairPort" placeholder="Port">
+                        <input type="text" id="pairCode" placeholder="Code">
+                    </div>
+                    <button id="pairButton">Pair</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div
+        class="info"
+    >
+        <div
+        class="info"
+        >
+            By : 4m17
+        </div>
+        <div
+        class="info"
+        >
+            Version : 1.0.0
+        </div>
+    </div>
+</body>
+
+</html>

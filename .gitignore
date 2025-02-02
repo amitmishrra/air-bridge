@@ -1,0 +1,29 @@
+# Node.js dependencies
+/node_modules/
+
+# Build output
+/dist/
+/build/
+
+# Electron-specific
+/.vscode/
+/.yarn/
+/package-lock.json
+
+# macOS Finder
+.DS_Store
+
+# Windows Installer
+*.exe
+*.msi
+
+# Logs
+*.log
+
+# IDEs and Editors
+.idea/
+.vscode/
+
+# OS files
+Thumbs.db
+Desktop.ini
