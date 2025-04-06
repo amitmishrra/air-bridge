@@ -55,7 +55,7 @@ To get Air Bridge running on your machine, follow these steps:
    ```sh
    npx electron-builder --mac
 
-5. Build the application for macOS:
+5. Build the application for Linux:
    ```sh
    npx electron-builder --linux
   
