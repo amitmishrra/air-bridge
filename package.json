@@ -2,6 +2,10 @@
   "name": "air-bridge",
   "version": "1.0.0",
   "main": "index.js",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electronmon .",
@@ -11,9 +15,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Air Bridge is an Electron-based application designed to facilitate the connection of Android devices to your development environment via ADB (Android Debug Bridge). It provides a straightforward interface for establishing and displaying active ADB connections.",
   "dependencies": {
     "child_process": "^1.0.2",
+    "dnssd": "^0.4.1",
     "jsqr": "^1.4.0"
   },
   "devDependencies": {
@@ -21,8 +26,33 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
+    "compression": "maximum",
     "appId": "com.yourdomain.airbridge",
     "productName": "Air Bridge",
+    "asar": true,
+    "compression": "maximum",
+    "files": [
+      "index.html",
+      "index.js",
+      "main.js",
+      "scripts/**/*",
+      "styles/**/*",
+      "assets/**/*",
+      "package.json",
+      "!**/*.map",
+      "!**/*.ts",
+      "!**/*.md",
+      "!*.code-workspace",
+      "!build/",
+      "!dist/",
+      "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!node_modules/*/{README*,readme*}",
+      "!node_modules/.bin",
+      "!**/*.log"
+    ],
+    "directories": {
+      "output": "build"
+    },
     "win": {
       "icon": "./assets/icon.png",
       "target": [
@@ -32,18 +62,10 @@
         }
       ]
     },
-    "files": [
-      "**/*",
-      "!**/*.js.map",
-      "!**/*.ts",
-      "!*.code-workspace",
-      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
-      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
-      "!**/node_modules/*.d.ts",
-      "!**/node_modules/.bin"
-    ],
-    "directories": {
-      "output": "build"
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
