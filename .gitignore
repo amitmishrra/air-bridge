@@ -1,14 +1,14 @@
 # Node.js dependencies
-/node_modules/
+node_modules/
 
-# Build output
-/dist/
-/build/
+# Build outputs (ignore all dist and build folders anywhere)
+**/dist/
+**/build/
 
 # Electron-specific
-/.vscode/
-/.yarn/
-/package-lock.json
+.vscode/
+.yarn/
+package-lock.json
 
 # macOS Finder
 .DS_Store

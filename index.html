@@ -2,58 +2,100 @@
 <html lang="en">
 
 <head>
+    <!-- -----------------------------------------------------------------------------
+         Meta and Title Setup for Air Bridge App
+         ----------------------------------------------------------------------------- -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Air Bridge</title>
+
+    <!-- -----------------------------------------------------------------------------
+         External Stylesheet and Renderer Script
+         ----------------------------------------------------------------------------- -->
     <link rel="stylesheet" href="./styles/styles.css">
     <script src="./scripts/renderer.js" defer></script>
 </head>
 
 <body>
-    <div class="container">
-        <div id="noADB">
-            <h1>Air Bridge</h1>
 
-            <p style="margin-top: 30px;">Sorry! Android Debug Bridge not found in this device.</p>
+    <!-- -----------------------------------------------------------------------------
+         ADB Not Found Screen - Displayed when ADB is missing from system
+         ----------------------------------------------------------------------------- -->
+    <div id="noADB">
+        <h1>Air Bridge</h1>
+        <p style="margin-top: 30px;">Sorry! Android Debug Bridge not found in this device.</p>
+        <img id="notFoundImage" src="./assets/notFound.svg" />
+        <button id="downloadButton">Download</button>
+    </div>
 
-            <img id="notFoundImage" src="./assets/notFound.svg" />
+    <!-- -----------------------------------------------------------------------------
+         Loader Container - Shown while attempting to connect
+         ----------------------------------------------------------------------------- -->
+    <div id="loaderContainer">
+        <div id="connectLoader" class="loader"></div>
+    </div>
 
-            <button id="downloadButton">Download</button>
+    <!-- -----------------------------------------------------------------------------
+         Main Application Interface
+         ----------------------------------------------------------------------------- -->
+    <div id="main">
+        <!-- Header Section with ADB Version and Info Button -->
+        <div class="header">
+            <p id="adbVersion" class="adb-version"></p>
 
-        </div>
+            <!-- Info Button to Show Wireless Debugging Guide -->
+            <div id="infoBtn">ℹ️</div>
 
-        <div id="loaderContainer">
-            <div id="connectLoader" class="loader"></div>
-        </div>
-
-        <div id="main">
-            <h1>Air Bridge</h1>
-            <div class="header">
-                <p id="adbVersion" class="adb-version"></p>
-                <!-- Wireless Debugging Guide Button and Modal -->
-                <div id="infoBtn">ℹ️</div>
-                <div id="wirelessGuideModal" class="modal">
-                    <div class="modal-content">
-                        <div class="header">
-                            <p>To find your device's IP address and port for ADB Wireless:</p>
-                            <span id="closeModal" style="cursor:pointer;">&times;</span>
-                        </div>
-                        <ol>
-                            <li>Go to 'Settings' on your Android device.</li>
-                            <li>Tap on 'About phone'.</li>
-                            <li>Tap on 'Status'.</li>
-                            <li>Find 'IP address'.</li>
-                            <li>Enable 'Developer options'.</li>
-                            <li>Inside 'Developer options', enable 'Wireless debugging'.</li>
-                            <li>Note the displayed IP address and port number.</li>
-                        </ol>
+            <!-- -----------------------------------------------------------------------------
+                 Modal: Wireless Debugging Instructions
+                 ----------------------------------------------------------------------------- -->
+            <div id="wirelessGuideModal" class="modal">
+                <div class="modal-content">
+                    <div class="header">
+                        <p>To find your device's IP address and port for ADB Wireless:</p>
+                        <span id="closeModal" style="cursor:pointer;">&times;</span>
                     </div>
+                    <ol>
+                        <li>Go to 'Settings' on your Android device.</li>
+                        <li>Tap on 'About phone'.</li>
+                        <li>Tap on 'Status'.</li>
+                        <li>Find 'IP address'.</li>
+                        <li>Enable 'Developer options'.</li>
+                        <li>Inside 'Developer options', enable 'Wireless debugging'.</li>
+                        <li>Note the displayed IP address and port number.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- -----------------------------------------------------------------------------
+             Dynamic Message Box - For success/error/status messages
+             ----------------------------------------------------------------------------- -->
+        <div id="messageBox" class="message-box"></div>
+
+        <!-- -----------------------------------------------------------------------------
+             Not Connected Section - Shown before a device is connected
+             ----------------------------------------------------------------------------- -->
+        <div id="notConnected">
+
+            <!-- Connection Mode Header with Toggle Switch -->
+            <div class="notConnected-header">
+                <label id="connection-mode-lable">Pick a Nearby Device</label>
+
+                <!-- Manual / Auto Mode Toggle -->
+                <div class="mode-toggle-container">
+                    <label class="switch">
+                        <input checked="true" type="checkbox" id="modeToggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="modeLabel">Manual Mode</span>
                 </div>
             </div>
 
-
-            <div id="notConnected">
-                <label for="device-ip">Enter Device Host and Port:</label>
+            <!-- -----------------------------------------------------------------------------
+                 Manual Mode UI
+                 ----------------------------------------------------------------------------- -->
+            <div id="manualContainer">
                 <div class="input-container">
                     <div class="input-section">
                         <p id="ipPrefix" class="ipText">xxx.xxx.</p>
@@ -64,47 +106,102 @@
                     <button id="connectBtn">Connect</button>
                 </div>
                 <img id="notConnctedImage" src="./assets/notConncted.svg" />
-
             </div>
 
+            <!-- -----------------------------------------------------------------------------
+                 Auto Mode UI - Device Discovery and Suggestions
+                 ----------------------------------------------------------------------------- -->
+            <div id="autoContainer">
+                <div id="deviceListContainer" class="device-list">
+                    <!-- Device cards will be injected here dynamically -->
+                </div>
 
-            <div id="messageBox" class="message-box"></div>
+                <!-- Loading Animation While Scanning -->
+                <div id="searchingLoader" class="state-message" style="display: none;">
+                    <img src="./assets/searching.gif" alt="Searching..." class="state-image" />
+                    <p>Searching for nearby devices...</p>
+                </div>
 
-            <div id="connectedSection">
-                <img id="connctedImage" src="./assets/connected.svg" />
-                <div id="connectedIp"></div>
-                <button id="disconnectBtn">Disonnect</button>
-            </div>
+                <!-- No Devices Found Message with Troubleshooting Tips -->
+                <div id="noDevicesFound" class="state-message" style="display: none; text-align: center;">
+                    <img src="./assets/notFound.png" alt="No Devices" class="state-image" style="max-width: 200px;" />
+                    <p><strong>No devices found.</strong></p>
 
-            <!-- New Modal for failed connections requiring pairing code -->
-            <div id="pairingModal" class="pair-modal">
-                <div class="pair-modal-content">
-                    <div class="header">
-                        <p>Please enter the pairing code along with host and port:</p>
-                        <span id="closePairingModal" style="cursor:pointer;">&times;</span>
+                    <div class="not-found-msg">
+                        <div>
+                            <ul style="text-align: left; display: inline-block; font-size: 12px;">
+                                <li>✅ Both devices are connected to the same Wi-Fi network</li>
+                                <li>✅ Wireless debugging is turned ON in developer options</li>
+                            </ul>
+                        </div>
+
+                        <div class="divsion"></div>
+
+                        <div>
+                            <ul style="text-align: left; display: inline-block; font-size: 12px;">
+                                <li>🔁 Toggle wireless debugging OFF and then ON</li>
+                                <li>🧪 Try switching to Manual Mode if nearby scan doesn’t work</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="pair-input-section">
-                        <input type="text" id="pairPort" placeholder="Port">
-                        <input type="text" id="pairCode" placeholder="Code">
+
+                    <!-- Retry and Manual Mode Buttons -->
+                    <div style="margin-top: 1.5rem; display: flex; flex-direction: row;">
+                        <div id="retryDiscoveryBtn" class="not-found-btn" style="margin-right: 1rem;">Retry</div>
+                        <div id="switchToManualBtn" class="not-found-btn">Try Manual Mode</div>
                     </div>
-                    <button id="pairButton">Pair</button>
                 </div>
             </div>
         </div>
+
+        <!-- -----------------------------------------------------------------------------
+             Connected Device Section - Shown when a device is successfully connected
+             ----------------------------------------------------------------------------- -->
+        <div id="connectedSection">
+            <img id="connctedImage" src="./assets/connected.svg" />
+            <div id="connectedIp"></div>
+
+            <!-- Detailed Device Info -->
+            <div class="device-info-card" id="deviceInfoCard" style="display: none;">
+                <h3>Connected Device Info</h3>
+                <div class="info-grid">
+                    <div>
+                        <div><strong>Brand:</strong> <span id="brand"></span></div>
+                        <div><strong>Model:</strong> <span id="model"></span></div>
+                    </div>
+                    <div>
+                        <div><strong>📱Android Version:</strong> <span id="androidVersion"></span></div>
+                        <div><strong>🔋Battery:</strong> <span id="battery"></span>%</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="button" id="disconnectBtn">Disonnect</button>
+        </div>
+
+        <!-- -----------------------------------------------------------------------------
+             Pairing Modal - Prompt for pairing code when connection fails
+             ----------------------------------------------------------------------------- -->
+        <div id="pairingModal" class="pair-modal">
+            <div class="pair-modal-content">
+                <div class="header">
+                    <p>Please enter the pairing code along with host and port:</p>
+                    <span id="closePairingModal" style="cursor:pointer;">&times;</span>
+                </div>
+                <div class="pair-input-section">
+                    <input type="text" id="pairPort" placeholder="Port">
+                    <input type="text" id="pairCode" placeholder="Code">
+                </div>
+                <button id="pairButton">Pair</button>
+            </div>
+        </div>
     </div>
-    <div
-        class="info"
-    >
-        <div
-        class="info"
-        >
-            By : 4m17
-        </div>
-        <div
-        class="info"
-        >
-            Version : 1.0.0
-        </div>
+
+    <!-- -----------------------------------------------------------------------------
+         Info Section - App Version Display
+         ----------------------------------------------------------------------------- -->
+    <div id="info-section" class="info">
+        <div class="info">Version : 1.0.0</div>
     </div>
 </body>
 
