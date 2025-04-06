@@ -15,7 +15,7 @@ Air Bridge is an Electron-based application designed to facilitate the connectio
 ## 📦 Download
 
 You can download the latest build of Air Bridge here:  
-**[🔗 Download ir Bridge-win32-x64 (.zip)](https://drive.google.com/drive/folders/1oMVshakE5I6nLdh0dR35FrrKZQNlQEFw?usp=sharing)**
+**[🔗 Download Air Bridge-win32-x64 (.zip)](https://drive.google.com/drive/folders/1oMVshakE5I6nLdh0dR35FrrKZQNlQEFw?usp=sharing)**
 
 ---
 
