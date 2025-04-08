@@ -5,12 +5,15 @@ const {
   Tray,
   Menu,
   nativeImage,
+  dialog,
 } = require("electron");
 const { exec } = require("child_process");
 const os = require("os");
 const dnssd = require("dnssd");
+const path = require("path");
 
 let mainWindow;
+let win;
 
 // -----------------------------------------------------------------------------
 // Electron App: Create main window and load UI
@@ -23,59 +26,13 @@ app.whenReady().then(() => {
     resizable: false,
     autoHideMenuBar: true,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
   mainWindow.loadFile("index.html");
-
-  // Create the system tray icon
-  const trayIcon = nativeImage.createFromPath(
-    path.join(__dirname, "assets", "tray-icon.png")
-  ); // Path to your tray icon
-  tray = new Tray(trayIcon);
-
-  // Create a context menu for the tray
-  const trayMenu = Menu.buildFromTemplate([
-    {
-      label: "Open App",
-      click: () => {
-        mainWindow.show();
-      },
-    },
-    {
-      label: "Quit",
-      click: () => {
-        app.quit();
-      },
-    },
-  ]);
-
-  // Set the context menu to the tray icon
-  tray.setContextMenu(trayMenu);
-
-  // Make the tray icon respond to click
-  tray.on("click", () => {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
-      mainWindow.show();
-    }
-  });
-
-  // Show the app window if it's not focused
-  mainWindow.on("show", () => {
-    tray.setHighlightMode("always");
-  });
-
-  // Hide the app when it's closed
-  mainWindow.on("close", (event) => {
-    if (!app.isQuiting) {
-      event.preventDefault();
-      mainWindow.hide();
-    }
-  });
 });
 
 // Quit the app when all windows are closed
@@ -373,4 +330,90 @@ ipcMain.handle("fetch-device-info", async (event, deviceId) => {
   };
 
   return deviceInfo;
+});
+
+ipcMain.handle("dialog:openApk", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ["openFile"],
+    filters: [{ name: "APK Files", extensions: ["apk"] }],
+  });
+  return result;
+});
+
+// -----------------------------------------------------------------------------
+// install-apk: Installs an APK on the connected device using ADB
+// -----------------------------------------------------------------------------
+ipcMain.handle("install-apk", async (event, apkPath, deviceId) => {
+  return new Promise((resolve, reject) => {
+    if (!apkPath || !apkPath.endsWith(".apk")) {
+      reject({
+        type: "error",
+        msg: "Invalid APK path.",
+      });
+      return;
+    }
+    if (!deviceId) {
+      reject({
+        type: "error",
+        msg: "Device ID is required when multiple devices are connected.",
+      });
+      return;
+    }
+
+    exec(`adb -s ${deviceId} install "${apkPath}"`, (error, stdout, stderr) => {
+      if (error || stderr.includes("Failure")) {
+        reject({
+          type: "error",
+          msg: `Failed to install APK: ${error?.message || stderr}`,
+        });
+      } else {
+        resolve({ type: "success", msg: "APK installed successfully." });
+      }
+    });
+  });
+});
+
+
+
+// -----------------------------------------------------------------------------
+// get-installed-apks: Fetches all installed APKs on a specific device
+// -----------------------------------------------------------------------------
+ipcMain.handle('get-installed-apks', async (event, deviceId) => {
+  return new Promise((resolve, reject) => {
+      exec(`adb -s ${deviceId} shell pm list packages -3`, (err, stdout) => {
+          if (err) return reject(err);
+          const packages = stdout.split('\n')
+              .filter(line => line.trim() !== '')
+              .map(line => line.replace('package:', '').trim());
+          resolve(packages);
+      });
+  });
+});
+
+ipcMain.handle('uninstall-app', async (event, deviceId, packageName) => {
+  return new Promise((resolve) => {
+      exec(`adb -s ${deviceId} uninstall ${packageName}`, (err, stdout) => {
+          if (err || !stdout.includes('Success')) {
+              resolve({ success: false });
+          } else {
+              resolve({ success: true });
+          }
+      });
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Mirror Screen
+// -----------------------------------------------------------------------------
+ipcMain.on('mirror-screen', (event, deviceId) => {
+  const scrcpyPath = path.join(__dirname, 'bin/scrcpy-win64', 'scrcpy.exe');
+  const command = `"${scrcpyPath}" -s ${deviceId}`;
+
+  exec(command, (error, stdout, stderr) => {
+      if (error) {
+          console.error(`scrcpy error: ${stderr}`);
+          return;
+      }
+      console.log(`scrcpy started: ${stdout}`);
+  });
 });

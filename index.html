@@ -45,7 +45,7 @@
 
             <!-- Info Button to Show Wireless Debugging Guide -->
             <div id="infoBtn">ℹ️</div>
-
+            <div id="connectedMenuButton">...</div>
             <!-- -----------------------------------------------------------------------------
                  Modal: Wireless Debugging Instructions
                  ----------------------------------------------------------------------------- -->
@@ -64,6 +64,86 @@
                         <li>Inside 'Developer options', enable 'Wireless debugging'.</li>
                         <li>Note the displayed IP address and port number.</li>
                     </ol>
+                </div>
+            </div>
+
+            <!-- -----------------------------------------------------------------------------
+              APK Utilities Modal 
+             ----------------------------------------------------------------------------- -->
+            <div id="apkUtilitiesModal" class="modal">
+                <div class="modal-content">
+                    <div class="header">
+                        <p>Options</p>
+                        <span id="closeApkModal" style="cursor:pointer;">&times;</span>
+                    </div>
+                    <div class="utility-options">
+                        <div id="mirrorScreenBtn" class="utility-btn">📺 Mirror Screen</div>
+                        <div id="installApkBtn" class="utility-btn">📦 Install App</div>
+                        <div id="uninstallApkBtn" class="utility-btn">🗑️ Uninstall 3rd-Party App</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- -----------------------------------------------------------------------------
+              Install APK Modal 
+             ----------------------------------------------------------------------------- -->
+            <div id="installApkModal" class="modal">
+                <div class="modal-content">
+                    <div class="header">
+                        <p>Install APK</p>
+                        <span id="closeInstallApkModal" style="cursor:pointer;">&times;</span>
+                    </div>
+
+                    <div id="dropZone" class="drop-zone">
+                        <img src="./assets/uploadicon.png" class="upload-icon" />
+                        <button id="browseApkBtn">Browse File</button>
+                        <input type="file" id="apkFileInput" accept=".apk" hidden />
+                    </div>
+
+                    <div id="apkFileDetails" class="apk-file-details" style="display: none;">
+                        <img src="./assets/apk.png" class="apk-icon" />
+                        <div class="filedetailsText">
+                            <p><strong>File :</strong> <span id="apkFileName"></span></p>
+                            <p><strong>Path :</strong> <span id="apkFilePath"></span></p>
+                        </div>
+                        <button id="installApkFinalBtn">Install</button>
+                    </div>
+
+                    <div id="installingAPKModel" class="installingAPKModel" style="display: none;">
+                        <img src="./assets/installing.gif" class="uploading-icon" />
+                        <p>Installig APK!</p>
+
+                    </div>
+
+                    <!-- <div id="apkUploadLoader" class="loader" style="display: none;"></div> -->
+                </div>
+            </div>
+
+
+            <!-- -----------------------------------------------------------------------------
+              Uninstall APK Modal 
+             ----------------------------------------------------------------------------- -->
+            <div id="uninstallAppsModal" class="modal">
+                <div class="modal-content">
+                    <div class="header">
+                        <p>Uninstall 3rd-Party Apps</p>
+                        <span id="closeUninstallAppsModal" style="cursor:pointer;">&times;</span>
+                    </div>
+
+                    <input type="text" id="searchApkInput" placeholder="Search app name..." class="search-input" />
+
+                    <div id="uninstallLoader" style="text-align: center; display: none;">
+                        <img src="./assets/searching-apps.gif" alt="Loading..." style="width: 180px; margin-top: 20px;" />
+                    </div>
+
+                    <div id="noAppsFound" style="text-align: center; display: none;">
+                        <img src="./assets/notFound.png" alt="No Apps" style="max-width: 150px; margin-top: 20px;" />
+                        <p><strong>No matching apps found.</strong></p>
+                    </div>
+
+                    <div id="appList" class="app-list">
+                        <!-- App cards dynamically populated here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -201,7 +281,7 @@
          Info Section - App Version Display
          ----------------------------------------------------------------------------- -->
     <div id="info-section" class="info">
-        <div class="info">Version : 1.0.0</div>
+        <div class="info">Version : 1.2.0</div>
     </div>
 </body>
 

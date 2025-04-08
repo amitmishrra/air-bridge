@@ -1,5 +1,3 @@
-const { ipcRenderer, shell } = require("electron");
-
 // -----------------------------------------------------------------------------
 // DOM Elements: Getting all necessary HTML elements used throughout the app
 // -----------------------------------------------------------------------------
@@ -7,6 +5,9 @@ const connectBtn = document.getElementById("connectBtn");
 const loader = document.getElementById("loaderContainer");
 const adbVersionText = document.getElementById("adbVersion");
 const infoBtn = document.getElementById("infoBtn");
+const connectedMenuButton = document.getElementById("connectedMenuButton");
+const apkUtilitiesModal = document.getElementById("apkUtilitiesModal");
+const closeApkModal = document.getElementById("closeApkModal");
 const closeModal = document.getElementById("closeModal");
 const closePairingModal = document.getElementById("closePairingModal");
 const wirelessGuideModal = document.getElementById("wirelessGuideModal");
@@ -23,11 +24,33 @@ const disconnectBtn = document.getElementById("disconnectBtn");
 const downloadButton = document.getElementById("downloadButton");
 const toggle = document.getElementById("modeToggle");
 const label = document.getElementById("modeLabel");
+const installApkBtn = document.getElementById("installApkBtn");
+const installApkModal = document.getElementById("installApkModal");
+const installingAPKModel = document.getElementById("installingAPKModel");
+const closeInstallApkModal = document.getElementById("closeInstallApkModal");
+const dropZone = document.getElementById("dropZone");
+const apkFileInput = document.getElementById("apkFileInput");
+const browseApkBtn = document.getElementById("browseApkBtn");
+const apkFileDetails = document.getElementById("apkFileDetails");
+const apkFileName = document.getElementById("apkFileName");
+const apkFilePath = document.getElementById("apkFilePath");
+const installApkFinalBtn = document.getElementById("installApkFinalBtn");
+const uninstallApkBtn = document.getElementById("uninstallApkBtn");
+const uninstallAppsModal = document.getElementById("uninstallAppsModal");
+const closeUninstallAppsModal = document.getElementById(
+  "closeUninstallAppsModal"
+);
+const appListContainer = document.getElementById("appList");
+const uninstallLoader = document.getElementById("uninstallLoader");
+const noAppsFound = document.getElementById("noAppsFound");
+const searchApkInput = document.getElementById("searchApkInput");
 
 let _currentDevice = "";
 let networkId = "";
 let _host = "";
 let _port = "";
+let selectedApkFile = null;
+let appsData = [];
 
 // -----------------------------------------------------------------------------
 // Modal Control Events
@@ -36,7 +59,9 @@ infoBtn.onclick = () => (wirelessGuideModal.style.display = "block");
 closeModal.onclick = () => (wirelessGuideModal.style.display = "none");
 closePairingModal.onclick = () => (pairingModal.style.display = "none");
 downloadButton.onclick = () =>
-  shell.openExternal("https://developer.android.com/studio/releases/platform-tools");
+  shell.openExternal(
+    "https://developer.android.com/studio/releases/platform-tools"
+  );
 
 // -----------------------------------------------------------------------------
 // showMessage: Show temporary message to user
@@ -57,7 +82,8 @@ function showMessage(msg, type) {
 async function fetchADBVersion() {
   loader.style.display = "flex";
 
-  const version = await ipcRenderer.invoke("get-adb-version");
+  console.log(window);
+  const version = await window?.electronAPI.getAdbVersion();
   loader.style.display = "none";
 
   if (version.includes("not found")) {
@@ -77,11 +103,13 @@ async function fetchADBVersion() {
 // @param {string} ipPort - IP and port of device (e.g., 192.168.1.101:5555)
 // -----------------------------------------------------------------------------
 async function loadDeviceDetails(ipPort) {
-  const deviceInfo = await ipcRenderer.invoke("fetch-device-info", ipPort);
+  const deviceInfo = await window?.electronAPI.fetchDeviceInfo(ipPort);
   if (deviceInfo) {
-    document.getElementById("brand").textContent = deviceInfo.brand?.toUpperCase();
+    document.getElementById("brand").textContent =
+      deviceInfo.brand?.toUpperCase();
     document.getElementById("model").textContent = deviceInfo.model;
-    document.getElementById("androidVersion").textContent = deviceInfo.androidVersion;
+    document.getElementById("androidVersion").textContent =
+      deviceInfo.androidVersion;
     document.getElementById("battery").textContent = deviceInfo.battery;
     document.getElementById("deviceInfoCard").style.display = "block";
   }
@@ -93,7 +121,7 @@ async function loadDeviceDetails(ipPort) {
 // -----------------------------------------------------------------------------
 async function fetchConnectedDevices() {
   loader.style.display = "flex";
-  const devices = await ipcRenderer.invoke("list-connected-devices");
+  const devices = await window?.electronAPI.listConnectedDevices();
   const currentDevice = await localStorage.getItem("adb_history");
   const isConnected = devices?.includes(currentDevice);
   var flag = false;
@@ -103,12 +131,16 @@ async function fetchConnectedDevices() {
     _currentDevice = currentDevice;
     notConnected.style.display = "none";
     connectedSection.style.display = "block";
+    connectedMenuButton.style.display = "flex";
+    infoBtn.style.display = "none";
     document.getElementById("connectedIp").innerText = currentDevice;
     flag = true;
   } else {
     await localStorage.clear();
     notConnected.style.display = "block";
     connectedSection.style.display = "none";
+    connectedMenuButton.style.display = "none";
+    infoBtn.style.display = "flex";
     await switchMode();
   }
 
@@ -128,7 +160,11 @@ async function connectToDevice() {
   loader.style.display = "flex";
 
   try {
-    const result = await ipcRenderer.invoke("connect-device", networkId, host, port);
+    const result = await window?.electronAPI.connectDevice(
+      networkId,
+      host,
+      port
+    );
     loader.style.display = "none";
     showMessage(result?.msg, result?.type);
 
@@ -152,7 +188,7 @@ async function disconnectDevice() {
   try {
     loader.style.display = "flex";
     disconnectBtn.disabled = true;
-    const result = await ipcRenderer.invoke("disconnect-device", _currentDevice);
+    const result = await window?.electronAPI.disconnectDevice(_currentDevice);
     showMessage(result, "success");
     fetchConnectedDevices();
     loader.style.display = "none";
@@ -168,7 +204,7 @@ disconnectBtn.addEventListener("click", disconnectDevice);
 // getIp: Get current network's IP prefix
 // -----------------------------------------------------------------------------
 async function getIp() {
-  const ip = await ipcRenderer.invoke("get-ip");
+  const ip = await window?.electronAPI.getLocalIp();
   networkId = ip?.split(".").slice(0, 3).join(".") + ".";
   ipText.innerText = networkId;
 }
@@ -184,7 +220,12 @@ async function pairDevice() {
 
   pairButton.disabled = true;
   try {
-    const result = await ipcRenderer.invoke("pair-device", networkId, _host, port, code);
+    const result = await window?.electronAPI.pairDevice(
+      networkId,
+      _host,
+      port,
+      code
+    );
     showMessage(result?.msg, result?.type);
     if (result?.type === "success") {
       pairingModal.style.display = "none";
@@ -204,7 +245,7 @@ pairButton.addEventListener("click", pairDevice);
 async function handleConnectionAfterPairing(ip, host, port) {
   try {
     pairButton.disabled = true;
-    const result = await ipcRenderer.invoke("connect-device", ip, host, port);
+    const result = await window?.electronAPI.connectDevice(ip, host, port);
     showMessage(result?.msg, result?.type);
     if (result?.type === "success") {
       await handleSuccess(result.ip);
@@ -230,7 +271,7 @@ async function handleSuccess(data) {
 async function fetchDiscoveredDevices() {
   try {
     showLoader();
-    const devices = await ipcRenderer.invoke("get-discovered-devices");
+    const devices = await window?.electronAPI.getDiscoveredDevices();
     console.log("Discovered Devices:", devices);
     if (devices.length > 0) {
       renderDeviceList(devices);
@@ -270,8 +311,7 @@ toggle.addEventListener("change", switchMode);
 // -----------------------------------------------------------------------------
 const connectToDeviceAuto = async (device) => {
   try {
-    const result = await ipcRenderer.invoke(
-      "connect-device-automatically",
+    const result = await window?.electronAPI.connectDeviceAutomatically(
       device?.address,
       device?.port
     );
@@ -355,6 +395,197 @@ document.getElementById("switchToManualBtn").addEventListener("click", () => {
   toggle.checked = false;
   toggle.dispatchEvent(new Event("change"));
 });
+
+// -----------------------------------------------------------------------------
+// Modal open/close logic
+// -----------------------------------------------------------------------------
+connectedMenuButton.addEventListener("click", () => {
+  apkUtilitiesModal.style.display = "block";
+});
+
+closeApkModal.addEventListener("click", () => {
+  apkUtilitiesModal.style.display = "none";
+});
+
+installApkBtn.addEventListener("click", () => {
+  installApkModal.style.display = "block";
+});
+
+closeInstallApkModal.addEventListener("click", () => {
+  installApkModal.style.display = "none";
+  resetUploadState();
+});
+
+// -----------------------------------------------------------------------------
+// File Browse using Electron Dialog (via preload)
+// -----------------------------------------------------------------------------
+browseApkBtn.addEventListener("click", async () => {
+  console.log("electronAPI:", window.electronAPI);
+
+  const result = await window?.electronAPI.openApkDialog();
+  if (!result.canceled && result.filePaths.length > 0) {
+    const apkPath = result.filePaths[0];
+    const fileName = apkPath.split(/[\\/]/).pop();
+    handleApkFile(apkPath, fileName);
+  }
+});
+
+// -----------------------------------------------------------------------------
+// Handle APK File
+// -----------------------------------------------------------------------------
+function handleApkFile(path, name) {
+  if (!name.endsWith(".apk")) {
+    alert("Please select a valid APK file");
+    return;
+  }
+  dropZone.style.display = "none";
+  loader.style.display = "none";
+  selectedApkFile = { path, name };
+  apkFileName.textContent = name;
+  apkFilePath.textContent = path;
+  apkFileDetails.style.display = "flex";
+}
+
+// -----------------------------------------------------------------------------
+// Install APK
+// -----------------------------------------------------------------------------
+installApkFinalBtn.addEventListener("click", async () => {
+  if (!selectedApkFile) {
+    showMessage("No APK selected.", "error");
+    return;
+  }
+
+  try {
+    closeInstallApkModal.style.display = "none";
+    apkFileDetails.style.display = "none";
+    installingAPKModel.style.display = "flex";
+    const output = await window?.electronAPI.installApk(
+      selectedApkFile.path,
+      _currentDevice
+    );
+    installingAPKModel.style.display = "none";
+    closeInstallApkModal.style.display = "block";
+
+    showMessage(output.msg, output.type);
+  } catch (err) {
+    installApkModal.style.display = "none";
+    resetUploadState();
+    showMessage("Installation failed.", "error");
+  } finally {
+    installApkModal.style.display = "none";
+    resetUploadState();
+  }
+});
+
+// -----------------------------------------------------------------------------
+// Reset Upload State
+// -----------------------------------------------------------------------------
+function resetUploadState() {
+  dropZone.style.display = "block";
+  apkFileDetails.style.display = "none";
+  loader.style.display = "none";
+  selectedApkFile = null;
+}
+
+// -----------------------------------------------------------------------------
+// Unnstall APK
+// -----------------------------------------------------------------------------
+uninstallApkBtn.addEventListener("click", async () => {
+  uninstallAppsModal.style.display = "block";
+  appListContainer.style.display = "none";
+  noAppsFound.style.display = "none";
+  uninstallLoader.style.display = "block";
+  searchApkInput.value = "";
+
+  try {
+    const apps = await window.electronAPI.getInstalledApks(_currentDevice);
+    appsData = apps;
+    renderAppList(apps);
+  } catch (error) {
+    console.error("Failed to fetch apps:", error);
+    noAppsFound.style.display = "block";
+  } finally {
+    uninstallLoader.style.display = "none";
+  }
+});
+
+// Close modal
+closeUninstallAppsModal.addEventListener("click", () => {
+  uninstallAppsModal.style.display = "none";
+});
+
+// Search
+searchApkInput.addEventListener("input", (e) => {
+  const query = e.target.value.toLowerCase();
+  const filteredApps = appsData.filter((app) =>
+    app.toLowerCase().includes(query)
+  );
+  renderAppList(filteredApps);
+});
+
+// Render app cards
+function renderAppList(apps) {
+  appListContainer.innerHTML = "";
+  if (!apps || apps.length === 0) {
+    appListContainer.style.display = "none";
+    noAppsFound.style.display = "block";
+    return;
+  }
+
+  noAppsFound.style.display = "none";
+  appListContainer.style.display = "block";
+
+  apps.forEach((pkg) => {
+    const appCard = document.createElement("div");
+    appCard.className = "app-item";
+    appCard.innerHTML = `
+        <span class="app-name">${pkg}</span>
+        <div class="delete-app-btn" data-package="${pkg}">❌</div>
+    `;
+    appList.appendChild(appCard);
+  });
+
+  document.querySelectorAll(".delete-app-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const pkg = e.target.dataset.package;
+      try {
+        const response = await window.electronAPI.uninstallApp(
+          _currentDevice,
+          pkg
+        );
+        if (response.success) {
+          showMessage(`${pkg} uninstall succesfully`, "success");
+          e.target.innerText = "Uninstalled";
+          e.target.disabled = true;
+        } else {
+          showMessage(`Failed to uninstall ${pkg}`, "error");
+        }
+      } catch (err) {
+        console.error("Uninstall failed:", err);
+      }
+    });
+  });
+}
+
+// -----------------------------------------------------------------------------
+// Screen mirroring
+// -----------------------------------------------------------------------------
+document.getElementById("mirrorScreenBtn").addEventListener("click", () => {
+  const isWindows64 = navigator.userAgent.includes("Win64");
+
+  if (!isWindows64) {
+    alert("🛑 Screen mirroring is only available for Windows 64-bit systems.");
+    return;
+  }
+
+  if (!_currentDevice) {
+    alert("⚠️ No device connected. Please connect a device first.");
+    return;
+  }
+
+  window.electronAPI.mirrorScreen(_currentDevice);
+});
+
 
 // -----------------------------------------------------------------------------
 // On Window Load: Check ADB, set IP prefix, fetch connected device if any
