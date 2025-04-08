@@ -24,4 +24,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("uninstall-app", deviceId, packageName),
   onDeviceFound: (callback) =>
     ipcRenderer.on("device-found", (event, data) => callback(data)),
+  mirrorScreen: (deviceId) => ipcRenderer.send('mirror-screen', deviceId)
 });

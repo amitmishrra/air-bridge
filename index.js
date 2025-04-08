@@ -401,3 +401,19 @@ ipcMain.handle('uninstall-app', async (event, deviceId, packageName) => {
       });
   });
 });
+
+// -----------------------------------------------------------------------------
+// Mirror Screen
+// -----------------------------------------------------------------------------
+ipcMain.on('mirror-screen', (event, deviceId) => {
+  const scrcpyPath = path.join(__dirname, 'bin/scrcpy-win64', 'scrcpy.exe');
+  const command = `"${scrcpyPath}" -s ${deviceId}`;
+
+  exec(command, (error, stdout, stderr) => {
+      if (error) {
+          console.error(`scrcpy error: ${stderr}`);
+          return;
+      }
+      console.log(`scrcpy started: ${stdout}`);
+  });
+});

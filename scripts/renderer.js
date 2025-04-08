@@ -486,20 +486,10 @@ function resetUploadState() {
   loader.style.display = "none";
   selectedApkFile = null;
 }
-// -----------------------------------------------------------------------------
-// On Window Load: Check ADB, set IP prefix, fetch connected device if any
-// -----------------------------------------------------------------------------
-window.onload = async () => {
-  await fetchADBVersion()
-    .then(async () => {
-      await getIp();
-      await fetchConnectedDevices();
-    })
-    .catch((err) => {
-      console.warn(err);
-    });
-};
 
+// -----------------------------------------------------------------------------
+// Unnstall APK
+// -----------------------------------------------------------------------------
 uninstallApkBtn.addEventListener("click", async () => {
   uninstallAppsModal.style.display = "block";
   appListContainer.style.display = "none";
@@ -508,9 +498,7 @@ uninstallApkBtn.addEventListener("click", async () => {
   searchApkInput.value = "";
 
   try {
-    // Call preload to get device id and app list
-    const apps = await window.electronAPI.getInstalledApks(_currentDevice); // Also exposed from preload
-
+    const apps = await window.electronAPI.getInstalledApks(_currentDevice);
     appsData = apps;
     renderAppList(apps);
   } catch (error) {
@@ -578,3 +566,37 @@ function renderAppList(apps) {
     });
   });
 }
+
+// -----------------------------------------------------------------------------
+// Screen mirroring
+// -----------------------------------------------------------------------------
+document.getElementById("mirrorScreenBtn").addEventListener("click", () => {
+  const isWindows64 = navigator.userAgent.includes("Win64");
+
+  if (!isWindows64) {
+    alert("🛑 Screen mirroring is only available for Windows 64-bit systems.");
+    return;
+  }
+
+  if (!_currentDevice) {
+    alert("⚠️ No device connected. Please connect a device first.");
+    return;
+  }
+
+  window.electronAPI.mirrorScreen(_currentDevice);
+});
+
+
+// -----------------------------------------------------------------------------
+// On Window Load: Check ADB, set IP prefix, fetch connected device if any
+// -----------------------------------------------------------------------------
+window.onload = async () => {
+  await fetchADBVersion()
+    .then(async () => {
+      await getIp();
+      await fetchConnectedDevices();
+    })
+    .catch((err) => {
+      console.warn(err);
+    });
+};
